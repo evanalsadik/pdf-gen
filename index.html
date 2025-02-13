@@ -3,48 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text to PDF Converter</title>
+    <title>Invoice Generator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #0077b5; /* Warna LinkedIn */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0077b5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #005f8b;
+        }
+    </style>
 </head>
 <body>
-    <h1>Text to PDF Converter</h1>
-    <textarea id="textInput" rows="10" cols="50" placeholder="Masukkan teks Anda di sini..."></textarea>
-    <br><br>
-    <button onclick="generatePDF()">Generate PDF</button>
+    <h1>Invoice Generator</h1>
+    <form id="invoiceForm">
+        <div class="form-group">
+            <label for="companyName">Nama Perusahaan</label>
+            <input type="text" id="companyName" placeholder="Masukkan nama perusahaan" required>
+        </div>
+        <div class="form-group">
+            <label for="clientName">Nama Klien</label>
+            <input type="text" id="clientName" placeholder="Masukkan nama klien" required>
+        </div>
+        <div class="form-group">
+            <label for="invoiceNumber">Nomor Invoice</label>
+            <input type="text" id="invoiceNumber" placeholder="Masukkan nomor invoice" required>
+        </div>
+        <div class="form-group">
+            <label for="invoiceDate">Tanggal Invoice</label>
+            <input type="date" id="invoiceDate" required>
+        </div>
+        <div class="form-group">
+            <label for="items">Item</label>
+            <textarea id="items" rows="5" placeholder="Masukkan item (format: Nama Item - Jumlah - Harga)"></textarea>
+        </div>
+        <button type="button" onclick="generateInvoice()">Generate Invoice</button>
+    </form>
 
     <script>
-        function generatePDF() {
+        function generateInvoice() {
             const { jsPDF } = window.jspdf;
-
-            // Buat dokumen PDF dengan ukuran A4
             const doc = new jsPDF({
-                orientation: "portrait", // atau "landscape" untuk orientasi landscape
+                orientation: "portrait",
                 unit: "mm",
                 format: "a4",
             });
 
-            const text = document.getElementById("textInput").value;
+            // Tambahkan logo LinkedIn
+            const logoUrl = "https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png";
+            doc.addImage(logoUrl, "PNG", 15, 10, 15, 15); // (x, y, width, height)
 
-            // Atur font dan ukuran teks
-            doc.setFont("helvetica"); // Jenis font: helvetica, times, courier, dll.
-            doc.setFontSize(12); // Ukuran font default
+            // Data dari form
+            const companyName = document.getElementById("companyName").value;
+            const clientName = document.getElementById("clientName").value;
+            const invoiceNumber = document.getElementById("invoiceNumber").value;
+            const invoiceDate = document.getElementById("invoiceDate").value;
+            const items = document.getElementById("items").value.split("\n");
 
-            // Tambahkan teks dengan warna hitam (default)
-            doc.setTextColor(0, 0, 0); // Warna teks (RGB)
-            doc.text(text, 15, 20); // Posisi teks (x, y) dalam mm
+            // Header Invoice
+            doc.setFontSize(18);
+            doc.setTextColor(0, 119, 181); // Warna LinkedIn
+            doc.text("INVOICE", 105, 20, { align: "center" }); // Judul di tengah
 
-            // Tambahkan teks dengan font dan warna berbeda
-            doc.setFontSize(16); // Ubah ukuran font
-            doc.setTextColor(255, 0, 0); // Warna merah (RGB)
-            doc.text("Ini adalah teks dengan font besar dan warna merah!", 15, 40);
+            // Informasi Perusahaan
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0); // Warna hitam
+            doc.text(`Nama Perusahaan: ${companyName}`, 15, 40);
+            doc.text(`Klien: ${clientName}`, 15, 50);
+            doc.text(`Nomor Invoice: ${invoiceNumber}`, 15, 60);
+            doc.text(`Tanggal Invoice: ${invoiceDate}`, 15, 70);
 
-            // Tambahkan garis pemisah
-            doc.setDrawColor(0, 0, 255); // Warna garis (biru)
-            doc.setLineWidth(0.5); // Ketebalan garis
-            doc.line(15, 50, 195, 50); // Garis dari (x1, y1) ke (x2, y2)
+            // Tabel Item
+            doc.setFontSize(14);
+            doc.setTextColor(0, 119, 181); // Warna LinkedIn
+            doc.text("Item", 15, 85);
 
-            // Simpan dan unduh PDF
-            doc.save("output.pdf");
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0); // Warna hitam
+            let yPos = 95;
+            items.forEach((item, index) => {
+                const [name, quantity, price] = item.split(" - ");
+                doc.text(`${index + 1}. ${name}`, 15, yPos);
+                doc.text(`Jumlah: ${quantity}`, 100, yPos);
+                doc.text(`Harga: ${price}`, 150, yPos);
+                yPos += 10;
+            });
+
+            // Total
+            doc.setFontSize(14);
+            doc.setTextColor(0, 119, 181); // Warna LinkedIn
+            doc.text("Total:", 15, yPos + 10);
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0); // Warna hitam
+            const total = items.reduce((sum, item) => {
+                const price = item.split(" - ")[2] || 0;
+                return sum + parseFloat(price);
+            }, 0);
+            doc.text(`Rp ${total.toLocaleString()}`, 150, yPos + 10);
+
+            // Simpan PDF
+            doc.save(`invoice_${invoiceNumber}.pdf`);
         }
     </script>
 </body>

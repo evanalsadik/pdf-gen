@@ -15,11 +15,35 @@
     <script>
         function generatePDF() {
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+
+            // Buat dokumen PDF dengan ukuran A4
+            const doc = new jsPDF({
+                orientation: "portrait", // atau "landscape" untuk orientasi landscape
+                unit: "mm",
+                format: "a4",
+            });
 
             const text = document.getElementById("textInput").value;
 
-            doc.text(text, 10, 10);
+            // Atur font dan ukuran teks
+            doc.setFont("helvetica"); // Jenis font: helvetica, times, courier, dll.
+            doc.setFontSize(12); // Ukuran font default
+
+            // Tambahkan teks dengan warna hitam (default)
+            doc.setTextColor(0, 0, 0); // Warna teks (RGB)
+            doc.text(text, 15, 20); // Posisi teks (x, y) dalam mm
+
+            // Tambahkan teks dengan font dan warna berbeda
+            doc.setFontSize(16); // Ubah ukuran font
+            doc.setTextColor(255, 0, 0); // Warna merah (RGB)
+            doc.text("Ini adalah teks dengan font besar dan warna merah!", 15, 40);
+
+            // Tambahkan garis pemisah
+            doc.setDrawColor(0, 0, 255); // Warna garis (biru)
+            doc.setLineWidth(0.5); // Ketebalan garis
+            doc.line(15, 50, 195, 50); // Garis dari (x1, y1) ke (x2, y2)
+
+            // Simpan dan unduh PDF
             doc.save("output.pdf");
         }
     </script>
